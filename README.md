@@ -13,10 +13,12 @@ Teaser when combined with [catch-watch](https://github.com/passcod/cargo-watch) 
 get automatically reloading development servers:
 
 ```
-$ systemfd -s http::5000 -- cargo watch -x run
+$ systemfd --no-pid -s http::5000 -- cargo watch -x run
 ```
 
-To see how to implement a server ready for systemfd see below.
+The `--no-pid` flag disables passing the `LISTEN_PID` variable.  This makes `listenfd` skip
+the pid check which would fail with `cargo watch` otherwise.  To see how to
+implement a server ready for systemfd see below.
 
 *This program was inspired by [catflap](https://github.com/passcod/catflap) but follows
 systemd semantics and supports multiple sockets.*
@@ -61,7 +63,7 @@ $ systemfd -s udp::1567 -- my-game-server-executable
 When `systemfd` starts it will print out the socket it created.  This can be disabled
 by passing `-q`.  Additionally if a port is set to `0` a random port is picked.
 
-## Usage with actix-web and listenfd
+## Usage with actix-web / cargo-watch and listenfd
 
 And here is an example [actix-web](https://actix.rs/) server that supports this
 by using the [listenfd](https://github.com/mitsuhiko/rust-listenfd) crate:
@@ -86,4 +88,10 @@ fn main() {
     };
     server.run();
 }
+```
+
+And then run it (don't forget `--no-pid`):
+
+```
+$ systemfd --no-pid -s http::5000 -- cargo watch -x run
 ```
