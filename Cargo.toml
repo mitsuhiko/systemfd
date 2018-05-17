@@ -2,6 +2,11 @@
 name = "systemfd"
 version = "0.1.0"
 authors = ["Armin Ronacher <armin.ronacher@active-4.com>"]
+description = "A convenient helper for passing sockets into another process.  Best to be combined with listenfd and cargo-watch."
+keywords = ["socket", "listenfd", "systemd", "socketactivation", "cargo-watch"]
+homepage = "https://github.com/mitsuhiko/systemfd"
+readme = "README.md"
+license = "MIT/Apache-2.0"
 
 [dependencies]
 clap = "2.31.2"

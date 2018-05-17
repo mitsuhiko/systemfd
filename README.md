@@ -3,9 +3,11 @@
 `systemfd` is the 1% of systemd that's useful for development.  It's a tiny process that
 opens a bunch of sockets and passes them to another process so that that process can
 then restart itself without dropping connections.  For that it uses ths systemd socket
-passing protocol (`LISTEN_FDS` + `LISTEN_PID`) environment variables.
+passing protocol (`LISTEN_FDS` + `LISTEN_PID`) environment variables.  Currently this
+only supports unix systems.
 
-Teaser when combined with [catch-watch](https://github.com/passcod/cargo-watch):
+Teaser when combined with [catch-watch](https://github.com/passcod/cargo-watch) you can
+get automatically reloading development servers:
 
 ```
 $ systemfd -s http::5000 -- cargo watch -x run
@@ -14,7 +16,7 @@ $ systemfd -s http::5000 -- cargo watch -x run
 To see how to implement a server ready for systemfd see below.
 
 *This program was inspired by [catflap](https://github.com/passcod/catflap) but follows
-systemd semantics.*
+systemd semantics and supports multiple sockets.*
 
 ## Installation
 
@@ -70,10 +72,10 @@ fn index(info: Path<(String, u32)>) -> String {
 }
 
 fn main() {
+    let mut manager = ListenFdManager::from_env();
     let mut server = server::new(
         || App::new()
             .resource("/{name}/{id}/index.html", |r| r.with(index)));
-    let mut manager = ListenFdManager::from_env();
     server = if let Some(listener) = manager.take_tcp_listener(0)? {
         server.listener(listener)
     } else {
