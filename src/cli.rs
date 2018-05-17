@@ -50,7 +50,7 @@ fn make_app() -> App<'static, 'static> {
                      can be given which picks a different socket type.\n\n\
                      The following socket types exist: tcp, http, https, unix, udp.\n\n\
                      The http/https sockets are just aliases to tcp that render \
-                     different help output."
+                     different help output.",
                 ),
         )
         .arg(
