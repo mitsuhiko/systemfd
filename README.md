@@ -1,5 +1,8 @@
 # systemfd
 
+<a href="https://travis-ci.com/mitsuhiko/systemfd"><img src="https://travis-ci.com/mitsuhiko/systemfd.svg?branch=master" alt=""></a>
+<a href="https://crates.io/crates/systemfd"><img src="https://img.shields.io/crates/v/systemfd.svg" alt=""></a>
+
 `systemfd` is the 1% of systemd that's useful for development.  It's a tiny process that
 opens a bunch of sockets and passes them to another process so that that process can
 then restart itself without dropping connections.  For that it uses ths systemd socket
