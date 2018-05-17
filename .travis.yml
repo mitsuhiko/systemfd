@@ -1,0 +1,16 @@
+os: linux
+language: rust
+cache:
+  cargo: true
+
+git:
+  depth: 1
+
+if: tag IS blank
+script: make $SUITE
+
+matrix:
+  include:
+    - env: SUITE=test
+    - env: SUITE=format-check
+      install: rustup component add rustfmt-preview
