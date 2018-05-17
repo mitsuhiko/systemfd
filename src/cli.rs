@@ -53,17 +53,13 @@ fn make_app() -> App<'static, 'static> {
                      different help output.",
                 ),
         )
-        .arg(
-            Arg::with_name("no_pid")
-                .long("no-pid")
-                .help(
-                    "When this is set the LISTEN_PID environment variable is not \
-                     emitted.  This is supported by some systems such as the listenfd \
-                     crate to skip the pid check.  This is necessary for proxying \
-                     through to other processe like cargo-watch which would break \
-                     the pid check."
-                ),
-        )
+        .arg(Arg::with_name("no_pid").long("no-pid").help(
+            "When this is set the LISTEN_PID environment variable is not \
+             emitted.  This is supported by some systems such as the listenfd \
+             crate to skip the pid check.  This is necessary for proxying \
+             through to other processe like cargo-watch which would break \
+             the pid check.",
+        ))
         .arg(
             Arg::with_name("quiet")
                 .short("q")
