@@ -5,6 +5,7 @@ use std::process::Command;
 use clap::{App, AppSettings, Arg};
 use console::{set_colors_enabled, Style};
 use failure::Error;
+use nix::unistd::getpid;
 
 use fd::Fd;
 
@@ -132,6 +133,11 @@ pub fn execute() -> Result<(), Error> {
     let cmdline: Vec<_> = args.values_of("command").unwrap().collect();
     let mut cmd = Command::new(&cmdline[0]);
     cmd.args(&cmdline[1..]);
+
+    if !raw_fds.is_empty() {
+        cmd.env("LISTEN_FDS", raw_fds.len().to_string());
+        cmd.env("LISTEN_PID", getpid().to_string());
+    }
 
     cmd.exec();
 
