@@ -54,16 +54,14 @@ fn make_app() -> App<'static, 'static> {
                 ),
         )
         .arg(
-            Arg::with_name("method")
-                .short("m")
-                .long("method")
-                .value_name("METHOD")
-                .default_value("systemd")
-                .possible_values(&["systemd"])
+            Arg::with_name("no_pid")
+                .long("no-pid")
                 .help(
-                    "The file descriptor passing method that should be used.  The \
-                     default and currently only supported is to use the systemd \
-                     protocol.",
+                    "When this is set the LISTEN_PID environment variable is not \
+                     emitted.  This is supported by some systems such as the listenfd \
+                     crate to skip the pid check.  This is necessary for proxying \
+                     through to other processe like cargo-watch which would break \
+                     the pid check."
                 ),
         )
         .arg(
@@ -83,12 +81,12 @@ fn make_app() -> App<'static, 'static> {
 
 pub fn execute() -> Result<(), Error> {
     let app = make_app();
-    let args = app.get_matches();
-    let quiet = args.is_present("quiet");
+    let matches = app.get_matches();
+    let quiet = matches.is_present("quiet");
 
     let prefix_style = Style::new().dim().bold();
     let log_style = Style::new().cyan();
-    match args.value_of("color") {
+    match matches.value_of("color") {
         Some("always") => set_colors_enabled(true),
         Some("never") => set_colors_enabled(false),
         _ => {}
@@ -108,7 +106,7 @@ pub fn execute() -> Result<(), Error> {
     }
 
     let mut fds: Vec<Fd> = Vec::new();
-    if let Some(values) = args.values_of("socket") {
+    if let Some(values) = matches.values_of("socket") {
         for socket in values {
             fds.push(socket.parse()?);
         }
@@ -130,13 +128,15 @@ pub fn execute() -> Result<(), Error> {
         }
     }
 
-    let cmdline: Vec<_> = args.values_of("command").unwrap().collect();
+    let cmdline: Vec<_> = matches.values_of("command").unwrap().collect();
     let mut cmd = Command::new(&cmdline[0]);
     cmd.args(&cmdline[1..]);
 
     if !raw_fds.is_empty() {
         cmd.env("LISTEN_FDS", raw_fds.len().to_string());
-        cmd.env("LISTEN_PID", getpid().to_string());
+        if !matches.is_present("no_pid") {
+            cmd.env("LISTEN_PID", getpid().to_string());
+        }
     }
 
     cmd.exec();
