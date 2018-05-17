@@ -69,7 +69,7 @@ And here is an example [actix-web](https://actix.rs/) server that supports this
 by using the [listenfd](https://github.com/mitsuhiko/rust-listenfd) crate:
 
 ```rust
-use listenfd::ListenFdManager;
+use listenfd::ListenFd;
 use actix_web::{server, App, Path};
 
 fn index(info: Path<(String, u32)>) -> String {
@@ -77,11 +77,11 @@ fn index(info: Path<(String, u32)>) -> String {
 }
 
 fn main() {
-    let mut manager = ListenFdManager::from_env();
+    let mut listenfd = ListenFd::from_env();
     let mut server = server::new(
         || App::new()
             .resource("/{name}/{id}/index.html", |r| r.with(index)));
-    server = if let Some(listener) = manager.take_tcp_listener(0)? {
+    server = if let Some(listener) = listenfd.take_tcp_listener(0)? {
         server.listener(listener)
     } else {
         server.bind("127.0.0.1:3000").unwrap()
