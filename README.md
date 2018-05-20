@@ -6,8 +6,9 @@
 `systemfd` is the 1% of systemd that's useful for development.  It's a tiny process that
 opens a bunch of sockets and passes them to another process so that that process can
 then restart itself without dropping connections.  For that it uses ths systemd socket
-passing protocol (`LISTEN_FDS` + `LISTEN_PID`) environment variables.  Currently this
-only supports unix systems.
+passing protocol (`LISTEN_FDS` + `LISTEN_PID`) environment variables on macOS and Linux
+and a custom protocol on Windows.  Both are supported by the
+[listenfd](https://github.com/mitsuhiko/rust-listenfd) crate.
 
 Teaser when combined with [catch-watch](https://github.com/passcod/cargo-watch) you can
 get automatically reloading development servers:
@@ -16,9 +17,10 @@ get automatically reloading development servers:
 $ systemfd --no-pid -s http::5000 -- cargo watch -x run
 ```
 
-The `--no-pid` flag disables passing the `LISTEN_PID` variable.  This makes `listenfd` skip
-the pid check which would fail with `cargo watch` otherwise.  To see how to
-implement a server ready for systemfd see below.
+The `--no-pid` flag disables passing the `LISTEN_PID` variable on unix (it has no effect
+on Windows).  This makes `listenfd` skip the pid check which would fail with
+`cargo watch` otherwise.  To see how to implement a server ready for systemfd
+see below.
 
 *This program was inspired by [catflap](https://github.com/passcod/catflap) but follows
 systemd semantics and supports multiple sockets.*
@@ -95,3 +97,20 @@ And then run it (don't forget `--no-pid`):
 ```
 $ systemfd --no-pid -s http::5000 -- cargo watch -x run
 ```
+
+## Windows Protocol
+
+On windows passing of sockets is significantly more complex than on Unix.  To
+achieve this this utility implements a custom socket passing system that is also
+implemented by the listenfd crate.  When the sockets are crated an additional
+local RPC server is spawned that gives out duplicates of the socket to other
+processes.  The RPC server uses TCP and is communicated to the child with the
+`SYSTEMFD_SOCKET_SERVER` environment variable.  The RPC calls themselves are
+protected with a `SYSTEMFD_SOCKET_SECRET` secret key.
+
+The only understood command is `SECRET|PID` with secret and the processes' PID
+inserted.  The server replies with N `WSAPROTOCOL_INFOW` structures.  The client
+is expected to count the number of bytes and act accordingly.
+
+This protocol is currently somewhat of a hack and might change.  It's only
+exists to support the `listenfd` crate.
