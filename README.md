@@ -84,7 +84,7 @@ fn main() {
         || App::new()
             .resource("/{name}/{id}/index.html", |r| r.with(index)));
     server = if let Some(listener) = listenfd.take_tcp_listener(0).unwrap() {
-        server.listener(listener)
+        server.listen(listener)
     } else {
         server.bind("127.0.0.1:3000").unwrap()
     };
