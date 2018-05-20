@@ -162,7 +162,7 @@ mod imp {
     }
 
     pub fn describe_addr(raw_fd: RawFd) -> Result<impl Display, Error> {
-        socket::getsockname(raw_fd)?
+        Ok(socket::getsockname(raw_fd)?)
     }
 
     fn sock_info(
