@@ -18,10 +18,9 @@ fn make_app() -> App<'static, 'static> {
             "\nsystemfd is a helper application that is particularly useful for \
              Rust developers during development.  It implements the systemd \
              socket passing protocol which permits a socket to be opened from a \
-             processed and then passed to others.  When paired with cargo-watch \
-             for instance automatic reloading servers can be used during \
-             development.\n\n\
-             To consume such a socket the listenfd crate can be used.",
+             processed and then passed to others.  On windows a custom protocol \
+             is used.  When paired with cargo-watch and the listenfd crate, \
+             automatic reloading servers can be used during development."
         )
         .arg(
             Arg::with_name("color")
@@ -56,7 +55,7 @@ fn make_app() -> App<'static, 'static> {
              emitted.  This is supported by some systems such as the listenfd \
              crate to skip the pid check.  This is necessary for proxying \
              through to other processe like cargo-watch which would break \
-             the pid check.",
+             the pid check.  This has no effect on windows.",
         ))
         .arg(
             Arg::with_name("quiet")
