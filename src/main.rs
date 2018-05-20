@@ -1,16 +1,29 @@
 extern crate clap;
 extern crate failure;
+#[macro_use]
+extern crate failure_derive;
 extern crate regex;
 #[macro_use]
 extern crate lazy_static;
 extern crate console;
 extern crate libc;
+
+#[cfg(unix)]
 extern crate nix;
+#[cfg(windows)]
+extern crate socket2;
+#[cfg(windows)]
+extern crate uuid;
+#[cfg(windows)]
+extern crate winapi;
 
 mod cli;
 mod fd;
+mod spawn;
+mod utils;
 
 use std::env;
+use std::process;
 
 fn main() {
     let want_bt = match env::var("RUST_BACKTRACE").as_ref().map(|x| x.as_str()) {
@@ -21,6 +34,9 @@ fn main() {
     match cli::execute() {
         Ok(()) => {}
         Err(err) => {
+            if let Some(&utils::QuietExit(code)) = err.downcast_ref() {
+                process::exit(code);
+            }
             println!("error: {}", err);
             for cause in err.causes().skip(1) {
                 println!("  caused by: {}", cause);

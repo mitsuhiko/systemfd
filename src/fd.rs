@@ -1,12 +1,15 @@
+use std::fmt::Display;
 use std::net::{Ipv4Addr, SocketAddr};
-use std::os::unix::io::RawFd;
 use std::path::PathBuf;
 use std::str::FromStr;
 
 use failure::{err_msg, Error};
-use libc::close;
-use nix::sys::socket;
 use regex::Regex;
+
+#[cfg(unix)]
+pub use std::os::unix::io::RawFd;
+#[cfg(windows)]
+pub use std::os::windows::io::RawSocket as RawFd;
 
 lazy_static! {
     static ref SPLIT_PREFIX: Regex = Regex::new(r"^([a-zA-Z]+)::(.+)$").unwrap();
@@ -85,72 +88,19 @@ impl Fd {
     fn should_listen(&self) -> bool {
         match self {
             Fd::TcpListener(..) => true,
+            Fd::UnixListener(..) => true,
             Fd::HttpListener(..) => true,
-            Fd::UdpSocket(..) => true,
-            _ => false,
+            Fd::UdpSocket(..) => false,
         }
-    }
-
-    fn sock_info(
-        &self,
-    ) -> Result<(socket::SockAddr, socket::AddressFamily, socket::SockType), Error> {
-        Ok(match self {
-            Fd::TcpListener(addr) => (
-                socket::SockAddr::new_inet(socket::InetAddr::from_std(addr)),
-                if addr.is_ipv4() {
-                    socket::AddressFamily::Inet
-                } else {
-                    socket::AddressFamily::Inet6
-                },
-                socket::SockType::Stream,
-            ),
-            Fd::HttpListener(addr, _secure) => (
-                socket::SockAddr::new_inet(socket::InetAddr::from_std(addr)),
-                if addr.is_ipv4() {
-                    socket::AddressFamily::Inet
-                } else {
-                    socket::AddressFamily::Inet6
-                },
-                socket::SockType::Stream,
-            ),
-            Fd::UdpSocket(addr) => (
-                socket::SockAddr::new_inet(socket::InetAddr::from_std(addr)),
-                if addr.is_ipv4() {
-                    socket::AddressFamily::Inet
-                } else {
-                    socket::AddressFamily::Inet6
-                },
-                socket::SockType::Datagram,
-            ),
-            Fd::UnixListener(path) => (
-                socket::SockAddr::new_unix(path)?,
-                socket::AddressFamily::Unix,
-                socket::SockType::Stream,
-            ),
-        })
     }
 
     /// Creates a raw fd from the fd spec.
     pub fn create_raw_fd(&self) -> Result<RawFd, Error> {
-        let (addr, fam, ty) = self.sock_info()?;
-        let sock = socket::socket(fam, ty, socket::SockFlag::empty(), None)?;
-
-        let rv = socket::bind(sock, &addr).map_err(From::from).and_then(|_| {
-            if self.should_listen() {
-                socket::listen(sock, 1)?;
-            }
-            Ok(())
-        });
-
-        if rv.is_err() {
-            unsafe { close(sock) };
-        }
-
-        rv.map(|_| sock)
+        create_raw_fd(self)
     }
 
     pub fn describe_raw_fd(&self, raw_fd: RawFd) -> Result<String, Error> {
-        let addr = socket::getsockname(raw_fd)?;
+        let addr = describe_addr(raw_fd)?;
         Ok(match self {
             Fd::TcpListener(..) => format!("{} (tcp listener)", addr),
             Fd::HttpListener(_addr, secure) => {
@@ -186,3 +136,140 @@ impl FromStr for Fd {
         }
     }
 }
+
+#[cfg(unix)]
+mod imp {
+    use super::*;
+    use libc::close;
+    use nix::sys::socket;
+
+    pub fn create_raw_fd(fd: &Fd) -> Result<RawFd, Error> {
+        let (addr, fam, ty) = sock_info(fd)?;
+        let sock = socket::socket(fam, ty, socket::SockFlag::empty(), None)?;
+
+        let rv = socket::bind(sock, &addr).map_err(From::from).and_then(|_| {
+            if fd.should_listen() {
+                socket::listen(sock, 1)?;
+            }
+            Ok(())
+        });
+
+        if rv.is_err() {
+            unsafe { close(sock) };
+        }
+
+        rv.map(|_| sock)
+    }
+
+    pub fn describe_addr(raw_fd: RawFd) -> Result<impl Display, Error> {
+        socket::getsockname(raw_fd)?
+    }
+
+    fn sock_info(
+        fd: &Fd,
+    ) -> Result<(socket::SockAddr, socket::AddressFamily, socket::SockType), Error> {
+        Ok(match fd {
+            Fd::TcpListener(addr) => (
+                socket::SockAddr::new_inet(socket::InetAddr::from_std(addr)),
+                if addr.is_ipv4() {
+                    socket::AddressFamily::Inet
+                } else {
+                    socket::AddressFamily::Inet6
+                },
+                socket::SockType::Stream,
+            ),
+            Fd::HttpListener(addr, _secure) => (
+                socket::SockAddr::new_inet(socket::InetAddr::from_std(addr)),
+                if addr.is_ipv4() {
+                    socket::AddressFamily::Inet
+                } else {
+                    socket::AddressFamily::Inet6
+                },
+                socket::SockType::Stream,
+            ),
+            Fd::UdpSocket(addr) => (
+                socket::SockAddr::new_inet(socket::InetAddr::from_std(addr)),
+                if addr.is_ipv4() {
+                    socket::AddressFamily::Inet
+                } else {
+                    socket::AddressFamily::Inet6
+                },
+                socket::SockType::Datagram,
+            ),
+            Fd::UnixListener(path) => (
+                socket::SockAddr::new_unix(path)?,
+                socket::AddressFamily::Unix,
+                socket::SockType::Stream,
+            ),
+        })
+    }
+}
+
+#[cfg(windows)]
+mod imp {
+    use super::*;
+    use socket2;
+    use std::mem::forget;
+    use std::os::windows::io::{FromRawSocket, IntoRawSocket};
+
+    pub fn create_raw_fd(fd: &Fd) -> Result<RawFd, Error> {
+        let (addr, dom, ty) = sock_info(fd)?;
+        let sock = socket2::Socket::new(dom, ty, None)?;
+
+        sock.bind(&addr)?;
+        if fd.should_listen() {
+            sock.listen(1)?;
+        }
+
+        Ok(sock.into_raw_socket())
+    }
+
+    pub fn describe_addr(raw_fd: RawFd) -> Result<impl Display, Error> {
+        let sock = unsafe { socket2::Socket::from_raw_socket(raw_fd) };
+        let local_addr = sock.local_addr()?;
+        let rv: SocketAddr = local_addr
+            .as_inet()
+            .map(|x| x.into())
+            .or_else(|| local_addr.as_inet6().map(|x| x.into()))
+            .unwrap();
+        forget(sock);
+        Ok(rv)
+    }
+
+    fn sock_info(fd: &Fd) -> Result<(socket2::SockAddr, socket2::Domain, socket2::Type), Error> {
+        Ok(match fd {
+            Fd::TcpListener(addr) => (
+                addr.clone().into(),
+                if addr.is_ipv4() {
+                    socket2::Domain::ipv4()
+                } else {
+                    socket2::Domain::ipv6()
+                },
+                socket2::Type::stream(),
+            ),
+            Fd::HttpListener(addr, _secure) => (
+                addr.clone().into(),
+                if addr.is_ipv4() {
+                    socket2::Domain::ipv4()
+                } else {
+                    socket2::Domain::ipv6()
+                },
+                socket2::Type::stream(),
+            ),
+            Fd::UdpSocket(addr) => (
+                addr.clone().into(),
+                if addr.is_ipv4() {
+                    socket2::Domain::ipv4()
+                } else {
+                    socket2::Domain::ipv6()
+                },
+                socket2::Type::dgram(),
+            ),
+            Fd::UnixListener(..) => {
+                return Err(err_msg("Cannot use unix sockets on windows"));
+            }
+        })
+    }
+}
+
+use self::imp::*;

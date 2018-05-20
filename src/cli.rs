@@ -1,13 +1,11 @@
 use std::io::{self, Write};
-use std::os::unix::process::CommandExt;
-use std::process::Command;
 
 use clap::{App, AppSettings, Arg};
 use console::{set_colors_enabled, Style};
 use failure::Error;
-use nix::unistd::getpid;
 
 use fd::Fd;
+use spawn;
 
 fn make_app() -> App<'static, 'static> {
     App::new("systemfd")
@@ -120,22 +118,10 @@ pub fn execute() -> Result<(), Error> {
 
     if !quiet {
         for &(ref fd, raw_fd) in &raw_fds {
-            log!("fd {}: {}", raw_fd, fd.describe_raw_fd(raw_fd)?);
+            log!("socket {}", fd.describe_raw_fd(raw_fd)?);
         }
     }
 
     let cmdline: Vec<_> = matches.values_of("command").unwrap().collect();
-    let mut cmd = Command::new(&cmdline[0]);
-    cmd.args(&cmdline[1..]);
-
-    if !raw_fds.is_empty() {
-        cmd.env("LISTEN_FDS", raw_fds.len().to_string());
-        if !matches.is_present("no_pid") {
-            cmd.env("LISTEN_PID", getpid().to_string());
-        }
-    }
-
-    cmd.exec();
-
-    Ok(())
+    spawn::spawn(raw_fds, &cmdline, matches.is_present("no_pid"))
 }
