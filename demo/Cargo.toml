@@ -1,0 +1,8 @@
+[package]
+name = "demo"
+version = "0.1.0"
+authors = ["Armin Ronacher <armin.ronacher@active-4.com>"]
+
+[dependencies]
+actix-web = "0.6.6"
+listenfd = "0.3.1"
