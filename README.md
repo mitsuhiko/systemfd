@@ -10,7 +10,7 @@ passing protocol (`LISTEN_FDS` + `LISTEN_PID`) environment variables on macOS an
 and a custom protocol on Windows.  Both are supported by the
 [listenfd](https://github.com/mitsuhiko/rust-listenfd) crate.
 
-Teaser when combined with [catch-watch](https://github.com/passcod/cargo-watch) you can
+Teaser when combined with [cargo-watch](https://github.com/passcod/cargo-watch) you can
 get automatically reloading development servers:
 
 ```
