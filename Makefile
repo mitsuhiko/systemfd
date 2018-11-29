@@ -9,6 +9,6 @@ cargotest:
 	@cargo test
 
 format-check:
-	@cargo fmt -- --write-mode diff
+	@cargo fmt -- --check
 
 .PHONY: all doc test cargotest format-check
