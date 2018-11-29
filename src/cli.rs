@@ -21,16 +21,14 @@ fn make_app() -> App<'static, 'static> {
              processed and then passed to others.  On windows a custom protocol \
              is used.  When paired with cargo-watch and the listenfd crate, \
              automatic reloading servers can be used during development.",
-        )
-        .arg(
+        ).arg(
             Arg::with_name("color")
                 .long("color")
                 .value_name("WHEN")
                 .default_value("auto")
                 .possible_values(&["auto", "always", "never"])
                 .help("Controls the color output"),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("socket")
                 .short("s")
                 .long("socket")
@@ -49,21 +47,18 @@ fn make_app() -> App<'static, 'static> {
                      The http/https sockets are just aliases to tcp that render \
                      different help output.",
                 ),
-        )
-        .arg(Arg::with_name("no_pid").long("no-pid").help(
+        ).arg(Arg::with_name("no_pid").long("no-pid").help(
             "When this is set the LISTEN_PID environment variable is not \
              emitted.  This is supported by some systems such as the listenfd \
              crate to skip the pid check.  This is necessary for proxying \
              through to other processe like cargo-watch which would break \
              the pid check.  This has no effect on windows.",
-        ))
-        .arg(
+        )).arg(
             Arg::with_name("quiet")
                 .short("q")
                 .long("quiet")
                 .help("Suppress all systemfd output."),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("command")
                 .multiple(true)
                 .last(true)
