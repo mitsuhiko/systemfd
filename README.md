@@ -35,7 +35,7 @@ $ cargo install systemfd
 
 ## Usage
 
-`systemfd` can create one or multiple sockets as specified on the command line and then
+`systemfd` creates one or more sockets as specified on the command line and then
 invokes another application.  Each time you pass the `-s` (or `--socket`)
 parameter a new socket is created.  The value for the parameter is a socket
 specification in the format `[TYPE::]VALUE` where `TYPE` defaults to `tcp` or
@@ -100,10 +100,10 @@ $ systemfd --no-pid -s http::5000 -- cargo watch -x run
 
 ## Windows Protocol
 
-On windows passing of sockets is significantly more complex than on Unix.  To
-achieve this this utility implements a custom socket passing system that is also
-implemented by the listenfd crate.  When the sockets are crated an additional
-local RPC server is spawned that gives out duplicates of the socket to other
+On Windows, passing of sockets is significantly more complex than on Unix.  To
+achieve this, this utility implements a custom socket passing system that is also
+implemented by the listenfd crate.  When the sockets are created, an additional
+local RPC server is spawned that gives out duplicates of the sockets to other
 processes.  The RPC server uses TCP and is communicated to the child with the
 `SYSTEMFD_SOCKET_SERVER` environment variable.  The RPC calls themselves are
 protected with a `SYSTEMFD_SOCKET_SECRET` secret key.
@@ -112,5 +112,5 @@ The only understood command is `SECRET|PID` with secret and the processes' PID
 inserted.  The server replies with N `WSAPROTOCOL_INFOW` structures.  The client
 is expected to count the number of bytes and act accordingly.
 
-This protocol is currently somewhat of a hack and might change.  It's only
+This protocol is currently somewhat of a hack and might change.  It only
 exists to support the `listenfd` crate.
