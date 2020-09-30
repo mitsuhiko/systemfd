@@ -38,15 +38,15 @@ fn main() {
                 process::exit(code);
             }
             println!("error: {}", err);
-            for cause in err.causes().skip(1) {
+            for cause in err.iter_chain().skip(1) {
                 println!("  caused by: {}", cause);
             }
             if want_bt {
                 let bt = err.backtrace();
-                println!("");
+                println!();
                 println!("{}", bt);
             } else if cfg!(debug_assertions) {
-                println!("");
+                println!();
                 println!("hint: you can set RUST_BACKTRACE=1 to get the entire backtrace.");
             }
         }
