@@ -1,8 +1,9 @@
+use std::fs::File;
 use std::io::{self, Write};
 
 use clap::{App, AppSettings, Arg};
 use console::{set_colors_enabled, Style};
-use failure::Error;
+use failure::{err_msg, Error};
 
 use fd::Fd;
 use spawn;
@@ -65,6 +66,18 @@ fn make_app() -> App<'static, 'static> {
                 .required(true)
                 .help("The command that should be run"),
         )
+        .arg(
+            Arg::with_name("write_file")
+                .short("w")
+                .long("write-file")
+                .value_name("FILENAME")
+                .help(
+                    "When this is set, the description of the sockets will be written \
+                     to tne named file. Each socket will be on a separate line. This \
+                     may be useful, for example, when specifying a TCP port number of \
+                     \"0\" which will cause the kernel to pick an unused port at random.",
+                ),
+        )
 }
 
 pub fn execute() -> Result<(), Error> {
@@ -113,6 +126,21 @@ pub fn execute() -> Result<(), Error> {
     if !quiet {
         for &(ref fd, raw_fd) in &raw_fds {
             log!("socket {}", fd.describe_raw_fd(raw_fd)?);
+        }
+    }
+
+    if let Some(filename) = matches.value_of("write_file") {
+        let mut output = File::create(filename)
+            .map_err(|error| err_msg(format!("Could not create {:?}: {}", filename, error)))?;
+        for &(ref fd, raw_fd) in &raw_fds {
+            write!(
+                output,
+                "{}",
+                fd.describe_raw_fd(raw_fd).map_err(|error| err_msg(format!(
+                    "Could not write to {:?}: {}",
+                    filename, error
+                )))?
+            )?;
         }
     }
 
