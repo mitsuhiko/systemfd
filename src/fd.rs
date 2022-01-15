@@ -3,7 +3,7 @@ use std::net::{Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use failure::{err_msg, Error};
+use anyhow::bail;
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -26,7 +26,7 @@ pub enum Fd {
 
 impl Fd {
     /// Creates a new listener from a string.
-    pub fn new_listener(s: &str) -> Result<Fd, Error> {
+    pub fn new_listener(s: &str) -> Result<Fd, anyhow::Error> {
         if let Ok(port) = s.parse() {
             Ok(Fd::TcpListener(SocketAddr::new(
                 Ipv4Addr::new(127, 0, 0, 1).into(),
@@ -37,16 +37,16 @@ impl Fd {
         } else if s.contains('/') {
             Fd::new_unix_listener(s)
         } else {
-            Err(err_msg(format!(
+            bail!(
                 "unsupported specification '{}'. Please provide \
                  an explicit socket type",
                 s
-            )))
+            )
         }
     }
 
     /// Creates a new tcp listener from a string.
-    pub fn new_tcp_listener(s: &str) -> Result<Fd, Error> {
+    pub fn new_tcp_listener(s: &str) -> Result<Fd, anyhow::Error> {
         if let Ok(port) = s.parse() {
             Ok(Fd::TcpListener(SocketAddr::new(
                 Ipv4Addr::new(127, 0, 0, 1).into(),
@@ -58,7 +58,7 @@ impl Fd {
     }
 
     /// Creates a new http listener from a string.
-    pub fn new_http_listener(s: &str, secure: bool) -> Result<Fd, Error> {
+    pub fn new_http_listener(s: &str, secure: bool) -> Result<Fd, anyhow::Error> {
         if let Ok(port) = s.parse() {
             Ok(Fd::HttpListener(
                 SocketAddr::new(Ipv4Addr::new(127, 0, 0, 1).into(), port),
@@ -70,12 +70,12 @@ impl Fd {
     }
 
     /// Creates a new unix listener from a string.
-    pub fn new_unix_listener(s: &str) -> Result<Fd, Error> {
+    pub fn new_unix_listener(s: &str) -> Result<Fd, anyhow::Error> {
         Ok(Fd::UnixListener(PathBuf::from(s)))
     }
 
     /// Creates a new udp socket from a string.
-    pub fn new_udp_socket(s: &str) -> Result<Fd, Error> {
+    pub fn new_udp_socket(s: &str) -> Result<Fd, anyhow::Error> {
         if let Ok(port) = s.parse() {
             Ok(Fd::UdpSocket(SocketAddr::new(
                 Ipv4Addr::new(127, 0, 0, 1).into(),
@@ -96,11 +96,11 @@ impl Fd {
     }
 
     /// Creates a raw fd from the fd spec.
-    pub fn create_raw_fd(&self) -> Result<RawFd, Error> {
+    pub fn create_raw_fd(&self) -> Result<RawFd, anyhow::Error> {
         create_raw_fd(self)
     }
 
-    pub fn describe_raw_fd(&self, raw_fd: RawFd) -> Result<String, Error> {
+    pub fn describe_raw_fd(&self, raw_fd: RawFd) -> Result<String, anyhow::Error> {
         let addr = describe_addr(raw_fd)?;
         Ok(match self {
             Fd::TcpListener(..) => format!("{} (tcp listener)", addr),
@@ -114,9 +114,9 @@ impl Fd {
 }
 
 impl FromStr for Fd {
-    type Err = Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Fd, Error> {
+    fn from_str(s: &str) -> Result<Fd, anyhow::Error> {
         let (ty, val) = if let Some(caps) = SPLIT_PREFIX.captures(s) {
             (
                 Some(caps.get(1).unwrap().as_str()),
@@ -132,7 +132,7 @@ impl FromStr for Fd {
             Some("https") => Fd::new_http_listener(val, true),
             Some("unix") => Fd::new_unix_listener(val),
             Some("udp") => Fd::new_udp_socket(val),
-            Some(ty) => Err(err_msg(format!("unknown socket type '{}'", ty))),
+            Some(ty) => bail!("unknown socket type '{}'", ty),
             None => Fd::new_listener(val),
         }
     }
@@ -141,6 +141,7 @@ impl FromStr for Fd {
 #[cfg(unix)]
 mod imp {
     use super::*;
+    use anyhow::Error;
     use libc::close;
     use nix::sys::socket;
     use nix::sys::socket::setsockopt;

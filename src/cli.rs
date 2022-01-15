@@ -1,19 +1,16 @@
 use std::io::{self, Write};
 
-use clap::{App, AppSettings, Arg};
+use anyhow::Error;
+use clap::{App, Arg};
 use console::{set_colors_enabled, Style};
-use failure::Error;
 
 use crate::fd::Fd;
 use crate::spawn;
 
-fn make_app() -> App<'static, 'static> {
+fn make_app() -> App<'static> {
     App::new("systemfd")
         .version(env!("CARGO_PKG_VERSION"))
-        .setting(AppSettings::UnifiedHelpMessage)
-        .setting(AppSettings::ColorNever)
         .max_term_width(79)
-        .usage("[OPTIONS] -- <command>...")
         .about(
             "\nsystemfd is a helper application that is particularly useful for \
              Rust developers during development.  It implements the systemd \
@@ -21,18 +18,20 @@ fn make_app() -> App<'static, 'static> {
              processed and then passed to others.  On windows a custom protocol \
              is used.  When paired with cargo-watch and the listenfd crate, \
              automatic reloading servers can be used during development.",
-        ).arg(
-            Arg::with_name("color")
+        )
+        .arg(
+            Arg::new("color")
                 .long("color")
                 .value_name("WHEN")
                 .default_value("auto")
                 .possible_values(&["auto", "always", "never"])
                 .help("Controls the color output"),
-        ).arg(
-            Arg::with_name("socket")
-                .short("s")
+        )
+        .arg(
+            Arg::new("socket")
+                .short('s')
                 .long("socket")
-                .multiple(true)
+                .multiple_occurrences(true)
                 .number_of_values(1)
                 .value_name("TYPE::SPEC")
                 .help(
@@ -47,20 +46,23 @@ fn make_app() -> App<'static, 'static> {
                      The http/https sockets are just aliases to tcp that render \
                      different help output.",
                 ),
-        ).arg(Arg::with_name("no_pid").long("no-pid").help(
+        )
+        .arg(Arg::new("no_pid").long("no-pid").help(
             "When this is set the LISTEN_PID environment variable is not \
              emitted.  This is supported by some systems such as the listenfd \
              crate to skip the pid check.  This is necessary for proxying \
              through to other processe like cargo-watch which would break \
              the pid check.  This has no effect on windows.",
-        )).arg(
-            Arg::with_name("quiet")
-                .short("q")
+        ))
+        .arg(
+            Arg::new("quiet")
+                .short('q')
                 .long("quiet")
                 .help("Suppress all systemfd output."),
-        ).arg(
-            Arg::with_name("command")
-                .multiple(true)
+        )
+        .arg(
+            Arg::new("command")
+                .multiple_occurrences(true)
                 .last(true)
                 .required(true)
                 .help("The command that should be run"),

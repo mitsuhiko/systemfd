@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use failure::Error;
+use anyhow::Error;
 
 use crate::fd::{Fd, RawFd};
 
@@ -20,8 +20,7 @@ mod imp {
                 cmd.env("LISTEN_PID", getpid().to_string());
             }
         }
-        cmd.exec();
-        unreachable!();
+        anyhow::bail!("failed to spawn: {}", cmd.exec());
     }
 }
 
