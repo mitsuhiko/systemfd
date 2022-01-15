@@ -142,10 +142,15 @@ mod imp {
     use super::*;
     use libc::close;
     use nix::sys::socket;
+    use nix::sys::socket::setsockopt;
+    use nix::sys::socket::sockopt::ReuseAddr;
+    use nix::sys::socket::sockopt::ReusePort;
 
     pub fn create_raw_fd(fd: &Fd) -> Result<RawFd, Error> {
         let (addr, fam, ty) = sock_info(fd)?;
         let sock = socket::socket(fam, ty, socket::SockFlag::empty(), None)?;
+        setsockopt(sock, ReuseAddr, &true)?;
+        setsockopt(sock, ReusePort, &true)?;
 
         let rv = socket::bind(sock, &addr).map_err(From::from).and_then(|_| {
             if fd.should_listen() {
