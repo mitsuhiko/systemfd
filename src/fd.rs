@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use failure::{err_msg, Error};
+use lazy_static::lazy_static;
 use regex::Regex;
 
 #[cfg(unix)]

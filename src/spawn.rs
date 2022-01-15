@@ -2,7 +2,7 @@ use std::process::Command;
 
 use failure::Error;
 
-use fd::{Fd, RawFd};
+use crate::fd::{Fd, RawFd};
 
 #[cfg(unix)]
 mod imp {

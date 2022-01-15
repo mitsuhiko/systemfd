@@ -7,6 +7,7 @@ keywords = ["socket", "listenfd", "systemd", "socketactivation", "cargo-watch"]
 homepage = "https://github.com/mitsuhiko/systemfd"
 readme = "README.md"
 license = "MIT/Apache-2.0"
+edition = "2018"
 
 [dependencies]
 clap = "2.33.2"

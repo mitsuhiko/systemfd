@@ -1,22 +1,3 @@
-extern crate clap;
-extern crate failure;
-#[macro_use]
-extern crate failure_derive;
-extern crate regex;
-#[macro_use]
-extern crate lazy_static;
-extern crate console;
-extern crate libc;
-
-#[cfg(unix)]
-extern crate nix;
-#[cfg(windows)]
-extern crate socket2;
-#[cfg(windows)]
-extern crate uuid;
-#[cfg(windows)]
-extern crate winapi;
-
 mod cli;
 mod fd;
 mod spawn;

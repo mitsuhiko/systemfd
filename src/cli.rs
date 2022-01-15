@@ -4,8 +4,8 @@ use clap::{App, AppSettings, Arg};
 use console::{set_colors_enabled, Style};
 use failure::Error;
 
-use fd::Fd;
-use spawn;
+use crate::fd::Fd;
+use crate::spawn;
 
 fn make_app() -> App<'static, 'static> {
     App::new("systemfd")
