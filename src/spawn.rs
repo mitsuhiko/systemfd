@@ -33,7 +33,7 @@ mod imp {
     use std::slice;
     use std::thread;
 
-    use failure::err_msg;
+    use anyhow::anyhow;
     use uuid::Uuid;
     use winapi::shared::minwindef::DWORD;
     use winapi::um::winsock2::{WSADuplicateSocketW, SOCKET, WSAPROTOCOL_INFOW};
@@ -53,21 +53,21 @@ mod imp {
         let secret: Uuid = pieces
             .next()
             .and_then(|x| x.parse().ok())
-            .ok_or_else(|| err_msg("invalid secret"))?;
+            .ok_or_else(|| anyhow!("invalid secret"))?;
         if &secret != ref_secret {
-            return Err(err_msg("invalid secret"));
+            return Err(anyhow!("invalid secret"));
         }
         let pid: DWORD = pieces
             .next()
             .and_then(|x| x.parse().ok())
-            .ok_or_else(|| err_msg("invalid or missing pid"))?;
+            .ok_or_else(|| anyhow!("invalid or missing pid"))?;
 
         for &(_, raw_fd) in raw_fds {
             let mut proto_info: WSAPROTOCOL_INFOW = unsafe { mem::zeroed() };
             unsafe {
                 let rv = WSADuplicateSocketW(raw_fd as SOCKET, pid, &mut proto_info);
                 if rv != 0 {
-                    return Err(err_msg(format!("socket duplicate failed with {}", rv)));
+                    return Err(anyhow!("socket duplicate failed with {}", rv));
                 }
             }
             let bytes: *const u8 = unsafe { mem::transmute(&proto_info) };
