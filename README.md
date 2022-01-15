@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/mitsuhiko/systemfd/workflows/Tests/badge.svg?branch=master)](https://github.com/mitsuhiko/systemfd/actions?query=workflow%3ATests)
 [![Crates.io](https://img.shields.io/crates/d/systemfd.svg)](https://crates.io/crates/systemfd)
 [![License](https://img.shields.io/github/license/mitsuhiko/systemfd)](https://github.com/mitsuhiko/systemfd/blob/master/LICENSE)
-[![rustc 1.42.0](https://img.shields.io/badge/rust-1.42%2B-orange.svg)](https://img.shields.io/badge/rust-1.42%2B-orange.svg)
+[![rustc 1.46.0](https://img.shields.io/badge/rust-1.46%2B-orange.svg)](https://img.shields.io/badge/rust-1.46%2B-orange.svg)
 [![Documentation](https://docs.rs/systemfd/badge.svg)](https://docs.rs/systemfd)
 
 `systemfd` is the 1% of systemd that's useful for development.  It's a tiny process that

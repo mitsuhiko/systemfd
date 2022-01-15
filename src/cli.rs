@@ -1,15 +1,17 @@
 use std::io::{self, Write};
 
 use anyhow::Error;
-use clap::{App, Arg};
+use clap::{App, Arg, AppSettings};
 use console::{set_colors_enabled, Style};
 
 use crate::fd::Fd;
 use crate::spawn;
 
-fn make_app() -> App<'static> {
+fn make_app() -> App<'static, 'static> {
     App::new("systemfd")
         .version(env!("CARGO_PKG_VERSION"))
+        .setting(AppSettings::UnifiedHelpMessage)
+        .setting(AppSettings::ColorNever)
         .max_term_width(79)
         .about(
             "\nsystemfd is a helper application that is particularly useful for \
@@ -20,7 +22,7 @@ fn make_app() -> App<'static> {
              automatic reloading servers can be used during development.",
         )
         .arg(
-            Arg::new("color")
+            Arg::with_name("color")
                 .long("color")
                 .value_name("WHEN")
                 .default_value("auto")
@@ -28,10 +30,10 @@ fn make_app() -> App<'static> {
                 .help("Controls the color output"),
         )
         .arg(
-            Arg::new("socket")
-                .short('s')
+            Arg::with_name("socket")
+                .short("s")
                 .long("socket")
-                .multiple_occurrences(true)
+                .multiple(true)
                 .number_of_values(1)
                 .value_name("TYPE::SPEC")
                 .help(
@@ -47,7 +49,7 @@ fn make_app() -> App<'static> {
                      different help output.",
                 ),
         )
-        .arg(Arg::new("no_pid").long("no-pid").help(
+        .arg(Arg::with_name("no_pid").long("no-pid").help(
             "When this is set the LISTEN_PID environment variable is not \
              emitted.  This is supported by some systems such as the listenfd \
              crate to skip the pid check.  This is necessary for proxying \
@@ -55,14 +57,14 @@ fn make_app() -> App<'static> {
              the pid check.  This has no effect on windows.",
         ))
         .arg(
-            Arg::new("quiet")
-                .short('q')
+            Arg::with_name("quiet")
+                .short("q")
                 .long("quiet")
                 .help("Suppress all systemfd output."),
         )
         .arg(
-            Arg::new("command")
-                .multiple_occurrences(true)
+            Arg::with_name("command")
+                .multiple(true)
                 .last(true)
                 .required(true)
                 .help("The command that should be run"),
