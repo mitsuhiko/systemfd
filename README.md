@@ -53,7 +53,7 @@ specification in the format `[TYPE::]VALUE` where `TYPE` defaults to `tcp` or
 * `<host>:<port>`: binds to a specific network interface and port
 * `<unix-path>`: requests a specific unix socket
 
-Examples:
+## Examples
 
 ```
 $ systemfd -s http::5000 -- my-server-executable
@@ -64,39 +64,6 @@ $ systemfd -s udp::1567 -- my-game-server-executable
 
 When `systemfd` starts it will print out the socket it created.  This can be disabled
 by passing `-q`.  Additionally if a port is set to `0` a random port is picked.
-
-## Usage with actix-web / cargo-watch and listenfd
-
-And here is an example [actix-web](https://actix.rs/) server that supports this
-by using the [listenfd](https://github.com/mitsuhiko/rust-listenfd) crate:
-
-```rust
-use listenfd::ListenFd;
-use actix_web::{server, App, Path};
-
-fn index(info: Path<(String, u32)>) -> String {
-   format!("Hello {}! id:{}", info.0, info.1)
-}
-
-fn main() {
-    let mut listenfd = ListenFd::from_env();
-    let mut server = server::new(
-        || App::new()
-            .resource("/{name}/{id}/index.html", |r| r.with(index)));
-    server = if let Some(listener) = listenfd.take_tcp_listener(0).unwrap() {
-        server.listen(listener)
-    } else {
-        server.bind("127.0.0.1:3000").unwrap()
-    };
-    server.run();
-}
-```
-
-And then run it (don't forget `--no-pid`):
-
-```
-$ systemfd --no-pid -s http::5000 -- cargo watch -x run
-```
 
 ## Windows Protocol
 
