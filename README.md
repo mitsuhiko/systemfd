@@ -1,14 +1,16 @@
 # systemfd
 
-<a href="https://travis-ci.com/mitsuhiko/systemfd"><img src="https://travis-ci.com/mitsuhiko/systemfd.svg?branch=master" alt=""></a>
-<a href="https://crates.io/crates/systemfd"><img src="https://img.shields.io/crates/v/systemfd.svg" alt=""></a>
+[![Build Status](https://github.com/mitsuhiko/systemfd/workflows/Tests/badge.svg?branch=master)](https://github.com/mitsuhiko/systemfd/actions?query=workflow%3ATests)
+[![Crates.io](https://img.shields.io/crates/d/systemfd.svg)](https://crates.io/crates/systemfd)
+[![License](https://img.shields.io/github/license/mitsuhiko/systemfd)](https://github.com/mitsuhiko/systemfd/blob/master/LICENSE)
+[![Documentation](https://docs.rs/systemfd/badge.svg)](https://docs.rs/systemfd)
 
 `systemfd` is the 1% of systemd that's useful for development.  It's a tiny process that
 opens a bunch of sockets and passes them to another process so that that process can
 then restart itself without dropping connections.  For that it uses ths systemd socket
 passing protocol (`LISTEN_FDS` + `LISTEN_PID`) environment variables on macOS and Linux
 and a custom protocol on Windows.  Both are supported by the
-[listenfd](https://github.com/mitsuhiko/rust-listenfd) crate.
+[listenfd](https://github.com/mitsuhiko/listenfd) crate.
 
 Teaser when combined with [cargo-watch](https://github.com/passcod/cargo-watch) you can
 get automatically reloading development servers:
@@ -81,3 +83,10 @@ is expected to count the number of bytes and act accordingly.
 
 This protocol is currently somewhat of a hack and might change.  It only
 exists to support the `listenfd` crate.
+
+## License and Links
+
+- [Documentation](https://docs.rs/systemfd/)
+- [Issue Tracker](https://github.com/mitsuhiko/systemfd/issues)
+- [Examples](https://github.com/mitsuhiko/systemfd/tree/main/examples)
+- License: [Apache-2.0](https://github.com/mitsuhiko/systemfd/blob/main/LICENSE)
