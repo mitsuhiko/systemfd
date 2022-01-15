@@ -33,7 +33,7 @@ impl Fd {
             )))
         } else if let Ok(socket_addr) = s.parse() {
             Ok(Fd::TcpListener(socket_addr))
-        } else if s.contains("/") {
+        } else if s.contains('/') {
             Fd::new_unix_listener(s)
         } else {
             Err(err_msg(format!(
