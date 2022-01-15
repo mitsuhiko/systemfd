@@ -1,7 +1,7 @@
 use std::io::{self, Write};
 
 use anyhow::Error;
-use clap::{App, Arg, AppSettings};
+use clap::{App, AppSettings, Arg};
 use console::{set_colors_enabled, Style};
 
 use crate::fd::Fd;
