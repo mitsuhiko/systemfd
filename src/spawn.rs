@@ -38,7 +38,7 @@ mod imp {
     use winapi::shared::minwindef::DWORD;
     use winapi::um::winsock2::{WSADuplicateSocketW, SOCKET, WSAPROTOCOL_INFOW};
 
-    use utils::QuietExit;
+    use crate::utils::QuietExit;
 
     fn share_sockets(
         mut sock: TcpStream,

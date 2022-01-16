@@ -219,6 +219,8 @@ mod imp {
     use std::mem::forget;
     use std::os::windows::io::{FromRawSocket, IntoRawSocket};
 
+    use anyhow::{bail, Error};
+
     pub fn create_raw_fd(fd: &Fd) -> Result<RawFd, Error> {
         let (addr, dom, ty) = sock_info(fd)?;
         let sock = socket2::Socket::new(dom, ty, None)?;
@@ -273,7 +275,7 @@ mod imp {
                 socket2::Type::dgram(),
             ),
             Fd::UnixListener(..) => {
-                return Err(err_msg("Cannot use unix sockets on windows"));
+                bail!("Cannot use unix sockets on windows");
             }
         })
     }
