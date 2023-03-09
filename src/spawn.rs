@@ -16,6 +16,8 @@ mod imp {
 
         if !raw_fds.is_empty() {
             cmd.env("LISTEN_FDS", raw_fds.len().to_string());
+            let (_, rawfd) = raw_fds.first().unwrap();
+            cmd.env("LISTEN_FDS_FIRST_FD", rawfd.to_string());
             if !no_pid {
                 cmd.env("LISTEN_PID", getpid().to_string());
             }
