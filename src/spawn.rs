@@ -11,7 +11,7 @@ mod imp {
     use std::os::unix::process::CommandExt;
 
     pub fn spawn(raw_fds: Vec<(Fd, RawFd)>, cmdline: &[&str], no_pid: bool) -> Result<(), Error> {
-        let mut cmd = Command::new(&cmdline[0]);
+        let mut cmd = Command::new(cmdline[0]);
         cmd.args(&cmdline[1..]);
 
         if !raw_fds.is_empty() {
