@@ -116,7 +116,7 @@ pub fn execute() -> Result<(), Error> {
 
     if !quiet {
         for &(ref fd, raw_fd) in &raw_fds {
-            log!("socket {}", fd.describe_raw_fd(raw_fd)?);
+            log!("socket {} -> fd #{}", fd.describe_raw_fd(raw_fd)?, raw_fd);
         }
     }
 
