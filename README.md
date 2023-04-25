@@ -8,7 +8,7 @@
 
 `systemfd` is the 1% of systemd that's useful for development.  It's a tiny process that
 opens a bunch of sockets and passes them to another process so that that process can
-then restart itself without dropping connections.  For that it uses ths systemd socket
+then restart itself without dropping connections.  For that it uses the systemd socket
 passing protocol (`LISTEN_FDS` + `LISTEN_PID`) environment variables on macOS and Linux
 and a custom protocol on Windows.  Both are supported by the
 [listenfd](https://github.com/mitsuhiko/listenfd) crate.
