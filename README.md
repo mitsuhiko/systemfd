@@ -4,7 +4,6 @@
 [![Crates.io](https://img.shields.io/crates/d/systemfd.svg)](https://crates.io/crates/systemfd)
 [![License](https://img.shields.io/github/license/mitsuhiko/systemfd)](https://github.com/mitsuhiko/systemfd/blob/master/LICENSE)
 [![rustc 1.46.0](https://img.shields.io/badge/rust-1.46%2B-orange.svg)](https://img.shields.io/badge/rust-1.46%2B-orange.svg)
-[![Documentation](https://docs.rs/systemfd/badge.svg)](https://docs.rs/systemfd)
 
 `systemfd` is the 1% of systemd that's useful for development.  It's a tiny process that
 opens a bunch of sockets and passes them to another process so that that process can
@@ -87,7 +86,6 @@ exists to support the `listenfd` crate.
 
 ## License and Links
 
-- [Documentation](https://docs.rs/systemfd/)
 - [Issue Tracker](https://github.com/mitsuhiko/systemfd/issues)
 - [Examples](https://github.com/mitsuhiko/systemfd/tree/main/examples)
 - License: [Apache-2.0](https://github.com/mitsuhiko/systemfd/blob/main/LICENSE)
