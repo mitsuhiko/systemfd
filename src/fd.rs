@@ -215,7 +215,7 @@ mod imp {
 #[cfg(windows)]
 mod imp {
     use super::*;
-    use std::mem::forget;
+    use std::mem::ManuallyDrop;
     use std::os::windows::io::{FromRawSocket, IntoRawSocket};
 
     use anyhow::{bail, Error};
@@ -233,14 +233,9 @@ mod imp {
     }
 
     pub fn describe_addr(raw_fd: RawFd) -> Result<impl Display, Error> {
-        let sock = unsafe { socket2::Socket::from_raw_socket(raw_fd) };
+        let sock = ManuallyDrop::new(unsafe { socket2::Socket::from_raw_socket(raw_fd) });
         let local_addr = sock.local_addr()?;
-        let rv: SocketAddr = local_addr
-            .as_inet()
-            .map(|x| x.into())
-            .or_else(|| local_addr.as_inet6().map(|x| x.into()))
-            .unwrap();
-        forget(sock);
+        let rv = local_addr.as_socket().unwrap();
         Ok(rv)
     }
 
@@ -249,29 +244,29 @@ mod imp {
             Fd::TcpListener(addr) => (
                 addr.into(),
                 if addr.is_ipv4() {
-                    socket2::Domain::ipv4()
+                    socket2::Domain::IPV4
                 } else {
-                    socket2::Domain::ipv6()
+                    socket2::Domain::IPV6
                 },
-                socket2::Type::stream(),
+                socket2::Type::STREAM,
             ),
             Fd::HttpListener(addr, _secure) => (
                 addr.into(),
                 if addr.is_ipv4() {
-                    socket2::Domain::ipv4()
+                    socket2::Domain::IPV4
                 } else {
-                    socket2::Domain::ipv6()
+                    socket2::Domain::IPV6
                 },
-                socket2::Type::stream(),
+                socket2::Type::STREAM,
             ),
             Fd::UdpSocket(addr) => (
                 addr.into(),
                 if addr.is_ipv4() {
-                    socket2::Domain::ipv4()
+                    socket2::Domain::IPV4
                 } else {
-                    socket2::Domain::ipv6()
+                    socket2::Domain::IPV6
                 },
-                socket2::Type::dgram(),
+                socket2::Type::DGRAM,
             ),
             Fd::UnixListener(..) => {
                 bail!("Cannot use unix sockets on windows");
