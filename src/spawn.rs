@@ -42,8 +42,7 @@ mod imp {
 
     use anyhow::anyhow;
     use uuid::Uuid;
-    use winapi::shared::minwindef::DWORD;
-    use winapi::um::winsock2::{WSADuplicateSocketW, SOCKET, WSAPROTOCOL_INFOW};
+    use windows_sys::Win32::Networking::WinSock::{WSADuplicateSocketW, SOCKET, WSAPROTOCOL_INFOW};
 
     use crate::utils::QuietExit;
 
@@ -64,7 +63,7 @@ mod imp {
         if &secret != ref_secret {
             return Err(anyhow!("invalid secret"));
         }
-        let pid: DWORD = pieces
+        let pid = pieces
             .next()
             .and_then(|x| x.parse().ok())
             .ok_or_else(|| anyhow!("invalid or missing pid"))?;
