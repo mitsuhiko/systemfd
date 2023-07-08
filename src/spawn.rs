@@ -1,3 +1,4 @@
+use std::ffi::OsString;
 use std::process::Command;
 
 use anyhow::Error;
@@ -10,7 +11,11 @@ mod imp {
     use nix::unistd::getpid;
     use std::os::unix::process::CommandExt;
 
-    pub fn spawn(raw_fds: Vec<(Fd, RawFd)>, cmdline: &[&str], no_pid: bool) -> Result<(), Error> {
+    pub fn spawn(
+        raw_fds: Vec<(Fd, RawFd)>,
+        cmdline: &[&OsString],
+        no_pid: bool,
+    ) -> Result<(), Error> {
         let mut cmd = Command::new(cmdline[0]);
         cmd.args(&cmdline[1..]);
 
@@ -81,7 +86,11 @@ mod imp {
         Ok(())
     }
 
-    pub fn spawn(raw_fds: Vec<(Fd, RawFd)>, cmdline: &[&str], _no_pid: bool) -> Result<(), Error> {
+    pub fn spawn(
+        raw_fds: Vec<(Fd, RawFd)>,
+        cmdline: &[&OsString],
+        _no_pid: bool,
+    ) -> Result<(), Error> {
         let mut cmd = Command::new(cmdline[0]);
         cmd.args(&cmdline[1..]);
 

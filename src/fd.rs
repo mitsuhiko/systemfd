@@ -154,12 +154,14 @@ mod imp {
         setsockopt(sock, ReuseAddr, &true)?;
         setsockopt(sock, ReusePort, &true)?;
 
-        let rv = socket::bind(sock, &addr).map_err(From::from).and_then(|_| {
-            if fd.should_listen() {
-                socket::listen(sock, 1)?;
-            }
-            Ok(())
-        });
+        let rv = socket::bind(sock, &*addr)
+            .map_err(From::from)
+            .and_then(|_| {
+                if fd.should_listen() {
+                    socket::listen(sock, 1)?;
+                }
+                Ok(())
+            });
 
         if rv.is_err() {
             unsafe { close(sock) };
@@ -169,15 +171,22 @@ mod imp {
     }
 
     pub fn describe_addr(raw_fd: RawFd) -> Result<impl Display, Error> {
-        Ok(socket::getsockname(raw_fd)?)
+        Ok(socket::getsockname::<socket::SockaddrStorage>(raw_fd)?)
     }
 
     fn sock_info(
         fd: &Fd,
-    ) -> Result<(socket::SockAddr, socket::AddressFamily, socket::SockType), Error> {
-        Ok(match fd {
+    ) -> Result<
+        (
+            Box<dyn socket::SockaddrLike>,
+            socket::AddressFamily,
+            socket::SockType,
+        ),
+        Error,
+    > {
+        Ok(match *fd {
             Fd::TcpListener(addr) => (
-                socket::SockAddr::new_inet(socket::InetAddr::from_std(addr)),
+                Box::new(socket::SockaddrStorage::from(addr)),
                 if addr.is_ipv4() {
                     socket::AddressFamily::Inet
                 } else {
@@ -186,7 +195,7 @@ mod imp {
                 socket::SockType::Stream,
             ),
             Fd::HttpListener(addr, _secure) => (
-                socket::SockAddr::new_inet(socket::InetAddr::from_std(addr)),
+                Box::new(socket::SockaddrStorage::from(addr)),
                 if addr.is_ipv4() {
                     socket::AddressFamily::Inet
                 } else {
@@ -195,7 +204,7 @@ mod imp {
                 socket::SockType::Stream,
             ),
             Fd::UdpSocket(addr) => (
-                socket::SockAddr::new_inet(socket::InetAddr::from_std(addr)),
+                Box::new(socket::SockaddrStorage::from(addr)),
                 if addr.is_ipv4() {
                     socket::AddressFamily::Inet
                 } else {
@@ -203,8 +212,8 @@ mod imp {
                 },
                 socket::SockType::Datagram,
             ),
-            Fd::UnixListener(path) => (
-                socket::SockAddr::new_unix(path)?,
+            Fd::UnixListener(ref path) => (
+                Box::new(socket::UnixAddr::new(path)?),
                 socket::AddressFamily::Unix,
                 socket::SockType::Stream,
             ),

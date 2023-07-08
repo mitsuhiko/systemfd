@@ -1,17 +1,17 @@
+use std::ffi::OsString;
 use std::io::{self, Write};
 
 use anyhow::Error;
-use clap::{App, AppSettings, Arg};
+use clap::{builder::Command, Arg};
+use clap::{value_parser, ArgAction};
 use console::{set_colors_enabled, Style};
 
 use crate::fd::Fd;
 use crate::spawn;
 
-fn make_app() -> App<'static, 'static> {
-    App::new("systemfd")
+fn make_app() -> Command {
+    Command::new("systemfd")
         .version(env!("CARGO_PKG_VERSION"))
-        .setting(AppSettings::UnifiedHelpMessage)
-        .setting(AppSettings::ColorNever)
         .max_term_width(79)
         .about(
             "\nsystemfd is a helper application that is particularly useful for \
@@ -22,18 +22,18 @@ fn make_app() -> App<'static, 'static> {
              automatic reloading servers can be used during development.",
         )
         .arg(
-            Arg::with_name("color")
+            Arg::new("color")
                 .long("color")
                 .value_name("WHEN")
                 .default_value("auto")
-                .possible_values(&["auto", "always", "never"])
+                .value_parser(["auto", "always", "never"])
                 .help("Controls the color output"),
         )
         .arg(
-            Arg::with_name("socket")
-                .short("s")
+            Arg::new("socket")
+                .short('s')
                 .long("socket")
-                .multiple(true)
+                .num_args(1..)
                 .number_of_values(1)
                 .value_name("TYPE::SPEC")
                 .help(
@@ -49,23 +49,30 @@ fn make_app() -> App<'static, 'static> {
                      different help output.",
                 ),
         )
-        .arg(Arg::with_name("no_pid").long("no-pid").help(
-            "When this is set the LISTEN_PID environment variable is not \
+        .arg(
+            Arg::new("no_pid")
+                .long("no-pid")
+                .action(ArgAction::SetTrue)
+                .help(
+                    "When this is set the LISTEN_PID environment variable is not \
              emitted.  This is supported by some systems such as the listenfd \
              crate to skip the pid check.  This is necessary for proxying \
              through to other processe like cargo-watch which would break \
              the pid check.  This has no effect on windows.",
-        ))
+                ),
+        )
         .arg(
-            Arg::with_name("quiet")
-                .short("q")
+            Arg::new("quiet")
+                .short('q')
                 .long("quiet")
+                .action(ArgAction::SetTrue)
                 .help("Suppress all systemfd output."),
         )
         .arg(
-            Arg::with_name("command")
-                .multiple(true)
+            Arg::new("command")
                 .last(true)
+                .num_args(1..)
+                .value_parser(value_parser!(OsString))
                 .required(true)
                 .help("The command that should be run"),
         )
@@ -74,11 +81,15 @@ fn make_app() -> App<'static, 'static> {
 pub fn execute() -> Result<(), Error> {
     let app = make_app();
     let matches = app.get_matches();
-    let quiet = matches.is_present("quiet");
+    let quiet = matches.get_flag("quiet");
 
     let prefix_style = Style::new().dim().bold();
     let log_style = Style::new().cyan();
-    match matches.value_of("color") {
+    match matches
+        .get_one::<String>("color")
+        .as_ref()
+        .map(|x| x.as_str())
+    {
         Some("always") => set_colors_enabled(true),
         Some("never") => set_colors_enabled(false),
         _ => {}
@@ -98,7 +109,7 @@ pub fn execute() -> Result<(), Error> {
     }
 
     let mut fds: Vec<Fd> = Vec::new();
-    if let Some(values) = matches.values_of("socket") {
+    if let Some(values) = matches.get_many::<String>("socket") {
         for socket in values {
             fds.push(socket.parse()?);
         }
@@ -120,6 +131,6 @@ pub fn execute() -> Result<(), Error> {
         }
     }
 
-    let cmdline: Vec<_> = matches.values_of("command").unwrap().collect();
-    spawn::spawn(raw_fds, &cmdline, matches.is_present("no_pid"))
+    let cmdline: Vec<_> = matches.get_many::<OsString>("command").unwrap().collect();
+    spawn::spawn(raw_fds, &cmdline, matches.get_flag("no_pid"))
 }
