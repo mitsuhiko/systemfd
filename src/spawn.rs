@@ -50,7 +50,7 @@ mod imp {
         let mut data = Vec::new();
         sock.read_to_end(&mut data)?;
         let out = String::from_utf8(data)?;
-        let mut pieces = out.split("|");
+        let mut pieces = out.split('|');
 
         let secret: Uuid = pieces
             .next()
@@ -72,7 +72,7 @@ mod imp {
                     return Err(anyhow!("socket duplicate failed with {}", rv));
                 }
             }
-            let bytes: *const u8 = unsafe { mem::transmute(&proto_info) };
+            let bytes: *const u8 = &proto_info as *const WSAPROTOCOL_INFOW as *const _;
             sock.write_all(unsafe {
                 slice::from_raw_parts(bytes, mem::size_of::<WSAPROTOCOL_INFOW>())
             })?;
@@ -82,7 +82,7 @@ mod imp {
     }
 
     pub fn spawn(raw_fds: Vec<(Fd, RawFd)>, cmdline: &[&str], _no_pid: bool) -> Result<(), Error> {
-        let mut cmd = Command::new(&cmdline[0]);
+        let mut cmd = Command::new(cmdline[0]);
         cmd.args(&cmdline[1..]);
 
         let secret: Uuid = Uuid::new_v4();
@@ -93,10 +93,8 @@ mod imp {
         cmd.env("SYSTEMFD_SOCKET_SECRET", secret.to_string());
 
         thread::spawn(move || {
-            for stream in listener.incoming() {
-                if let Ok(stream) = stream {
-                    share_sockets(stream, &secret, &raw_fds).unwrap();
-                }
+            for stream in listener.incoming().flatten() {
+                share_sockets(stream, &secret, &raw_fds).unwrap();
             }
         });
 

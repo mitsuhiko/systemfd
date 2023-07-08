@@ -215,7 +215,6 @@ mod imp {
 #[cfg(windows)]
 mod imp {
     use super::*;
-    use socket2;
     use std::mem::forget;
     use std::os::windows::io::{FromRawSocket, IntoRawSocket};
 
@@ -246,9 +245,9 @@ mod imp {
     }
 
     fn sock_info(fd: &Fd) -> Result<(socket2::SockAddr, socket2::Domain, socket2::Type), Error> {
-        Ok(match fd {
+        Ok(match *fd {
             Fd::TcpListener(addr) => (
-                addr.clone().into(),
+                addr.into(),
                 if addr.is_ipv4() {
                     socket2::Domain::ipv4()
                 } else {
@@ -257,7 +256,7 @@ mod imp {
                 socket2::Type::stream(),
             ),
             Fd::HttpListener(addr, _secure) => (
-                addr.clone().into(),
+                addr.into(),
                 if addr.is_ipv4() {
                     socket2::Domain::ipv4()
                 } else {
@@ -266,7 +265,7 @@ mod imp {
                 socket2::Type::stream(),
             ),
             Fd::UdpSocket(addr) => (
-                addr.clone().into(),
+                addr.into(),
                 if addr.is_ipv4() {
                     socket2::Domain::ipv4()
                 } else {
