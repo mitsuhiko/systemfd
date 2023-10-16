@@ -154,6 +154,11 @@ mod imp {
         setsockopt(sock, ReuseAddr, &true)?;
         setsockopt(sock, ReusePort, &true)?;
 
+        // kill stale unix sockets if they are there
+        if let Fd::UnixListener(ref path) = fd {
+            std::fs::remove_file(path).ok();
+        }
+
         let rv = socket::bind(sock, &*addr)
             .map_err(From::from)
             .and_then(|_| {
