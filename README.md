@@ -87,5 +87,5 @@ exists to support the `listenfd` crate.
 ## License and Links
 
 - [Issue Tracker](https://github.com/mitsuhiko/systemfd/issues)
-- [Examples](https://github.com/mitsuhiko/systemfd/tree/main/examples)
-- License: [Apache-2.0](https://github.com/mitsuhiko/systemfd/blob/main/LICENSE)
+- [Example](demo)
+- License: [Apache-2.0](LICENSE)
