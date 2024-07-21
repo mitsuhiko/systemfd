@@ -5,6 +5,7 @@ authors = ["Armin Ronacher <armin.ronacher@active-4.com>"]
 description = "A convenient helper for passing sockets into another process.  Best to be combined with listenfd and cargo-watch."
 keywords = ["socket", "listenfd", "systemd", "socketactivation", "cargo-watch"]
 homepage = "https://github.com/mitsuhiko/systemfd"
+repository = "https://github.com/mitsuhiko/systemfd"
 readme = "README.md"
 license = "Apache-2.0"
 edition = "2018"
@@ -25,3 +26,23 @@ libc = "0.2.74"
 socket2 = "0.5.0"
 uuid = { version = "1.1.0", features = ["v4"] }
 windows-sys = { version = "0.48.0", features = ["Win32_Networking_WinSock"] }
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.12.0"
+# CI backends to support
+ci = ["github"]
+# The installers to generate for each app
+installers = ["shell", "powershell"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+# Publish jobs to run in CI
+pr-run-mode = "plan"
+# Whether to install an updater program
+install-updater = false
