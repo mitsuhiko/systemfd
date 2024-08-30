@@ -96,8 +96,8 @@ impl Fd {
     }
 
     /// Creates a raw fd from the fd spec.
-    pub fn create_raw_fd(&self) -> Result<RawFd, anyhow::Error> {
-        create_raw_fd(self)
+    pub fn create_raw_fd(&self, listen_backlog: i32) -> Result<RawFd, anyhow::Error> {
+        create_raw_fd(self, listen_backlog)
     }
 
     pub fn describe_raw_fd(&self, raw_fd: RawFd) -> Result<String, anyhow::Error> {
@@ -148,7 +148,7 @@ mod imp {
     use nix::sys::socket::sockopt::ReuseAddr;
     use nix::sys::socket::sockopt::ReusePort;
 
-    pub fn create_raw_fd(fd: &Fd) -> Result<RawFd, Error> {
+    pub fn create_raw_fd(fd: &Fd, listen_backlog: i32) -> Result<RawFd, Error> {
         let (addr, fam, ty) = sock_info(fd)?;
         let sock = socket::socket(fam, ty, socket::SockFlag::empty(), None)?;
         setsockopt(sock, ReuseAddr, &true)?;
@@ -163,7 +163,7 @@ mod imp {
             .map_err(From::from)
             .and_then(|_| {
                 if fd.should_listen() {
-                    socket::listen(sock, 1)?;
+                    socket::listen(sock, listen_backlog as usize)?;
                 }
                 Ok(())
             });
@@ -233,14 +233,15 @@ mod imp {
     use std::os::windows::io::{FromRawSocket, IntoRawSocket};
 
     use anyhow::{bail, Error};
+    use libc::c_int;
 
-    pub fn create_raw_fd(fd: &Fd) -> Result<RawFd, Error> {
+    pub fn create_raw_fd(fd: &Fd, listen_backlog: i32) -> Result<RawFd, Error> {
         let (addr, dom, ty) = sock_info(fd)?;
         let sock = socket2::Socket::new(dom, ty, None)?;
 
         sock.bind(&addr)?;
         if fd.should_listen() {
-            sock.listen(1)?;
+            sock.listen(listen_backlog as c_int)?;
         }
 
         Ok(sock.into_raw_socket())
