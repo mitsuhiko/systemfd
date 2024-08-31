@@ -8,6 +8,7 @@ doc:
 
 test:
 	@cargo test
+	@cd demo; cargo check
 
 format:
 	@rustup component add rustfmt 2> /dev/null
