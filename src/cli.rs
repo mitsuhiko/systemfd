@@ -63,6 +63,12 @@ fn make_app() -> Command {
                 ),
         )
         .arg(
+            Arg::new("no_reuse")
+                .long("no-reuse")
+                .action(ArgAction::SetTrue)
+                .help("When disabled SO_REUSEADDR/SO_REUSEPORT are not set on the sockets."),
+        )
+        .arg(
             Arg::new("no_pid")
                 .long("no-pid")
                 .action(ArgAction::SetTrue)
@@ -128,12 +134,15 @@ pub fn execute() -> Result<(), Error> {
         }
     }
 
+    let reuse = !matches.get_flag("no_reuse");
+
     let mut raw_fds = vec![];
     if fds.is_empty() {
         log!("warning: no sockets created");
     } else {
         for fd in fds {
-            let raw_fd = fd.create_raw_fd(*matches.get_one("backlog").expect("default value"))?;
+            let raw_fd =
+                fd.create_raw_fd(*matches.get_one("backlog").expect("default value"), reuse)?;
             raw_fds.push((fd, raw_fd));
         }
     }
