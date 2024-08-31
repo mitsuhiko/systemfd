@@ -50,6 +50,19 @@ fn make_app() -> Command {
                 ),
         )
         .arg(
+            Arg::new("backlog")
+                .short('b')
+                .long("backlog")
+                .default_value("1")
+                .value_parser(value_parser!(i32).range(1..))
+                .value_name("LISTEN-QUEUE")
+                .help(
+                    "The length of the socket backlog queue in any listen call which \
+                     must be a positive integer greater than or equal to 1.  The OS may \
+                     silently cap this value to a lower setting.",
+                ),
+        )
+        .arg(
             Arg::new("no_pid")
                 .long("no-pid")
                 .action(ArgAction::SetTrue)
@@ -57,7 +70,7 @@ fn make_app() -> Command {
                     "When this is set the LISTEN_PID environment variable is not \
              emitted.  This is supported by some systems such as the listenfd \
              crate to skip the pid check.  This is necessary for proxying \
-             through to other processe like cargo-watch which would break \
+             through to other processes like cargo-watch which would break \
              the pid check.  This has no effect on windows.",
                 ),
         )
@@ -120,7 +133,7 @@ pub fn execute() -> Result<(), Error> {
         log!("warning: no sockets created");
     } else {
         for fd in fds {
-            let raw_fd = fd.create_raw_fd()?;
+            let raw_fd = fd.create_raw_fd(*matches.get_one("backlog").expect("default value"))?;
             raw_fds.push((fd, raw_fd));
         }
     }
