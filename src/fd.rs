@@ -96,8 +96,8 @@ impl Fd {
     }
 
     /// Creates a raw fd from the fd spec.
-    pub fn create_raw_fd(&self, listen_backlog: i32) -> Result<RawFd, anyhow::Error> {
-        create_raw_fd(self, listen_backlog)
+    pub fn create_raw_fd(&self, listen_backlog: i32, reuse: bool) -> Result<RawFd, anyhow::Error> {
+        create_raw_fd(self, listen_backlog, reuse)
     }
 
     pub fn describe_raw_fd(&self, raw_fd: RawFd) -> Result<String, anyhow::Error> {
@@ -148,11 +148,14 @@ mod imp {
     use nix::sys::socket::sockopt::ReuseAddr;
     use nix::sys::socket::sockopt::ReusePort;
 
-    pub fn create_raw_fd(fd: &Fd, listen_backlog: i32) -> Result<RawFd, Error> {
+    pub fn create_raw_fd(fd: &Fd, listen_backlog: i32, reuse: bool) -> Result<RawFd, Error> {
         let (addr, fam, ty) = sock_info(fd)?;
         let sock = socket::socket(fam, ty, socket::SockFlag::empty(), None)?;
-        setsockopt(sock, ReuseAddr, &true)?;
-        setsockopt(sock, ReusePort, &true)?;
+
+        if reuse {
+            setsockopt(sock, ReuseAddr, &true)?;
+            setsockopt(sock, ReusePort, &true)?;
+        }
 
         // kill stale unix sockets if they are there
         if let Fd::UnixListener(ref path) = fd {
@@ -234,9 +237,13 @@ mod imp {
 
     use anyhow::{bail, Error};
 
-    pub fn create_raw_fd(fd: &Fd, listen_backlog: i32) -> Result<RawFd, Error> {
+    pub fn create_raw_fd(fd: &Fd, listen_backlog: i32, reuse: bool) -> Result<RawFd, Error> {
         let (addr, dom, ty) = sock_info(fd)?;
         let sock = socket2::Socket::new(dom, ty, None)?;
+
+        if reuse {
+            sock.set_reuse_address(true);
+        }
 
         sock.bind(&addr)?;
         if fd.should_listen() {
