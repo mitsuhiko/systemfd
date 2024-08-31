@@ -233,7 +233,6 @@ mod imp {
     use std::os::windows::io::{FromRawSocket, IntoRawSocket};
 
     use anyhow::{bail, Error};
-    use libc::c_int;
 
     pub fn create_raw_fd(fd: &Fd, listen_backlog: i32) -> Result<RawFd, Error> {
         let (addr, dom, ty) = sock_info(fd)?;
@@ -241,7 +240,7 @@ mod imp {
 
         sock.bind(&addr)?;
         if fd.should_listen() {
-            sock.listen(listen_backlog as c_int)?;
+            sock.listen(listen_backlog as _)?;
         }
 
         Ok(sock.into_raw_socket())
