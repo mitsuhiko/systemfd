@@ -29,10 +29,22 @@ systemd semantics and supports multiple sockets.*
 
 ## Installation
 
-You can get systemfd by installing it with cargo:
+You can install a precompiled version of systemfd with curl to bash:
 
 ```
-$ cargo install systemfd
+curl -sSfL https://github.com/mitsuhiko/systemfd/releases/latest/download/systemfd-installer.sh | sh
+```
+
+On windows you can use powershell to install it:
+
+```
+powershell -c "irm https://github.com/mitsuhiko/systemfd/releases/latest/download/systemfd-installer.ps1 | iex"
+```
+
+Alternatively you can get systemfd by installing it with cargo:
+
+```
+cargo install systemfd
 ```
 
 ## Usage
