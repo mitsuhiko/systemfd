@@ -24,9 +24,6 @@ on Windows).  This makes `listenfd` skip the pid check which would fail with
 `cargo watch` otherwise.  To see how to implement a server ready for systemfd
 see below.
 
-*This program was inspired by [catflap](https://github.com/passcod/catflap) but follows
-systemd semantics and supports multiple sockets.*
-
 ## Installation
 
 You can install a precompiled version of systemfd with curl to bash:
