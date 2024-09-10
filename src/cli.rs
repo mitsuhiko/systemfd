@@ -33,9 +33,8 @@ fn make_app() -> Command {
             Arg::new("socket")
                 .short('s')
                 .long("socket")
-                .num_args(1..)
-                .number_of_values(1)
                 .value_name("TYPE::SPEC")
+                .action(ArgAction::Append)
                 .help(
                     "This parameter can be supplied multiple times.  Each time it's \
                      specified a new socket of a certain specification is created.\n\
