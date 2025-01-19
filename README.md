@@ -1,6 +1,5 @@
 # systemfd
 
-[![Build Status](https://github.com/mitsuhiko/systemfd/workflows/Tests/badge.svg?branch=master)](https://github.com/mitsuhiko/systemfd/actions?query=workflow%3ATests)
 [![Crates.io](https://img.shields.io/crates/d/systemfd.svg)](https://crates.io/crates/systemfd)
 [![License](https://img.shields.io/github/license/mitsuhiko/systemfd)](https://github.com/mitsuhiko/systemfd/blob/master/LICENSE)
 [![rustc 1.64.0](https://img.shields.io/badge/rust-1.64%2B-orange.svg)](https://img.shields.io/badge/rust-1.64%2B-orange.svg)
