@@ -147,6 +147,7 @@ mod imp {
     use nix::sys::socket::setsockopt;
     use nix::sys::socket::sockopt::ReuseAddr;
     use nix::sys::socket::sockopt::ReusePort;
+    use nix::sys::socket::AddressFamily;
 
     pub fn create_raw_fd(fd: &Fd, listen_backlog: i32, reuse: bool) -> Result<RawFd, Error> {
         let (addr, fam, ty) = sock_info(fd)?;
@@ -154,7 +155,13 @@ mod imp {
 
         if reuse {
             setsockopt(sock, ReuseAddr, &true)?;
-            setsockopt(sock, ReusePort, &true)?;
+
+            // port reuse will only work on inet sockets.  On new linux kernels
+            // in particular it will fail with an error if attempted on unix sockets
+            // or others.
+            if matches!(fam, AddressFamily::Inet | AddressFamily::Inet6) {
+                setsockopt(sock, ReusePort, &true)?;
+            }
         }
 
         // kill stale unix sockets if they are there
