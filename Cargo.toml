@@ -1,6 +1,6 @@
 [package]
 name = "systemfd"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["Armin Ronacher <armin.ronacher@active-4.com>"]
 description = "A convenient helper for passing sockets into another process.  Best to be combined with listenfd and cargo-watch."
 keywords = ["socket", "listenfd", "systemd", "socketactivation", "cargo-watch"]
