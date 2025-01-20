@@ -11,11 +11,13 @@ passing protocol (`LISTEN_FDS` + `LISTEN_PID`) environment variables on macOS an
 and a custom protocol on Windows.  Both are supported by the
 [listenfd](https://github.com/mitsuhiko/listenfd) crate.
 
-Teaser when combined with [cargo-watch](https://github.com/passcod/cargo-watch) you can
-get automatically reloading development servers:
+When combined with [cargo-watch](https://github.com/watchexec/cargo-watch) or
+[watchexec](https://github.com/watchexec/watchexec) you can get automatically
+reloading development servers:
 
 ```
 $ systemfd --no-pid -s http::5000 -- cargo watch -x run
+$ systemfd --no-pid -s http::5000 -- watchexec -r -- cargo run
 ```
 
 The `--no-pid` flag disables passing the `LISTEN_PID` variable on unix (it has no effect
